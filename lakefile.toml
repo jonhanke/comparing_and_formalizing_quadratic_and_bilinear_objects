@@ -12,4 +12,5 @@ name = "mathlib"
 scope = "leanprover-community"
 
 [[lean_lib]]
-name = "QuadraticAndBilinear.+"
+name = "QuadraticAndBilinear"
+globs = "QuadraticAndBilinear.+"
