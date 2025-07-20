@@ -1,4 +1,8 @@
 import Mathlib
+import QuadraticAndBilinear.ForMathlib.LinearAlgebra.QuadraticForm.Basic
+import QuadraticAndBilinear.ForMathlib.LinearAlgebra.QuadraticForm.DFinsupp
+import QuadraticAndBilinear.ForMathlib.LinearAlgebra.BilinearMap
+
 
 -- Some basics
 
@@ -14,16 +18,6 @@ example (B : M →ₗ[R] M →ₗ[R] N) : B.IsAlt ↔ ∀ m, B m m = 0 := Iff.rf
 -- defn:quadratic_maps
 example (Q : QuadraticMap R M N) (a : R) (m : M) : Q (a • m) = (a * a) • Q m := Q.map_smul a m
 
-/-- `QuadraticMap.comp` as a linear map. -/
-@[simps]
-def QuadraticMap.compL {R M N P : Type*} [CommSemiring R]
-    [AddCommMonoid M] [Module R M] [AddCommMonoid N] [Module R N] [AddCommMonoid P] [Module R P]
-    (f : M →ₗ[R] N) :
-    QuadraticMap R N P →ₗ[R] QuadraticMap R M P where
-  toFun Q := Q.comp f
-  map_add' _ _ := ext fun _ => rfl
-  map_smul' _ _ := ext fun _ => rfl
-
 open scoped DirectSum
 
 variable {ι : Type*} {Mᵢ : ι → Type*}
@@ -31,21 +25,20 @@ variable [DecidableEq ι]  [(i : ι) → AddCommGroup (Mᵢ i)] [(i : ι) → Mo
 
 -- defn:direct_sums_of_quadratic_maps
 def QuadraticMap.directSum [DecidableEq ι] :
-    (⨁ i, QuadraticMap R (Mᵢ i) N) →ₗ[R] QuadraticMap R (⨁ i, Mᵢ i) N :=
-  DirectSum.toModule _ _ _ fun i => QuadraticMap.compL (DirectSum.component _ _ _ i)
+    (Π i, QuadraticMap R (Mᵢ i) N) →ₗ[R] QuadraticMap R (⨁ i, Mᵢ i) N :=
+  QuadraticMap.dfinsupp
 
 @[simp]
-theorem QuadraticMap.directSum_single (i : ι) (Q : QuadraticMap R (Mᵢ i) N) :
-    QuadraticMap.directSum (DirectSum.of _ i Q) = Q.comp (DirectSum.component _ _ _ i) :=
-  DirectSum.toModule_lof _ _ _
+theorem QuadraticMap.directSum_of (i : ι) (Q : QuadraticMap R (Mᵢ i) N) :
+    QuadraticMap.directSum (Pi.single i Q) = Q.comp (DirectSum.component _ _ _ i) :=
+  QuadraticMap.dfinsupp_piSingle _ _
 
 
 @[simp]
-theorem QuadraticMap.directSum_apply_single
+theorem QuadraticMap.directSum_apply_of
       (Q : ⨁ i, QuadraticMap R (Mᵢ i) N) (i : ι) (m : Mᵢ i) :
-    QuadraticMap.directSum Q (DirectSum.of _ i m) = Q i m := by
-  -- this one is annoying because the API is bad, the actual content is boring.
-  sorry
+    QuadraticMap.directSum Q (DirectSum.of _ i m) = Q i m :=
+  QuadraticMap.dfinsupp_apply_single _ _ _
 
 /-- Two quadratic maps from a direct sum agree if they agree:
 1. On the diagonal
@@ -80,9 +73,10 @@ noncomputable def QuadraticMap.directSum_ext [LinearOrder ι]
     (fun i => DFunLike.congr_fun <| diag i)
     (fun i j hij m n => DFunLike.congr_fun (DFunLike.congr_fun (upperTri i j hij) m) n)
 
+-- note the families are infinite not finite!
 noncomputable def QuadraticMap.directSumTriangle [LinearOrder ι] :
-    ((⨁ i, QuadraticMap R (Mᵢ i) N) ×
-      (⨁ ij : {p : ι × ι // p.1 < p.2}, Mᵢ ij.val.1 →ₗ[R] Mᵢ ij.val.2 →ₗ[R] N)) ≃ₗ[R]
+    ((Π i, QuadraticMap R (Mᵢ i) N) ×
+      (Π ij : {p : ι × ι // p.1 < p.2}, Mᵢ ij.val.1 →ₗ[R] Mᵢ ij.val.2 →ₗ[R] N)) ≃ₗ[R]
       QuadraticMap R (⨁ i, Mᵢ i) N :=
   .ofLinear
     -- the forward map
@@ -93,7 +87,7 @@ noncomputable def QuadraticMap.directSumTriangle [LinearOrder ι] :
         sorry))
     -- the reverse map
     (LinearMap.prod
-      sorry
+      (LinearMap.pi fun i => QuadraticMap.compL (R := R) (DirectSum.lof _ _ _ i))
       sorry)
     -- proof they are inverses
     (by
