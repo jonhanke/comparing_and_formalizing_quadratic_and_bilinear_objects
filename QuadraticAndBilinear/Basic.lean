@@ -46,7 +46,7 @@ theorem QuadraticMap.directSum_apply_of
 
 We could require `i < j` in `offDiag`, but as `polarBilin` is symmetric it's not very useful.
 -/
-noncomputable def QuadraticMap.directSum_ext'
+theorem QuadraticMap.directSum_ext'
     {Q₁ Q₂ : QuadraticMap R (⨁ i, Mᵢ i) N}
     (diag : ∀ i m, Q₁ (.of _ i m) = Q₂ (.of _ i m))
     (offDiag : ∀ i j, i ≠ j → ∀ m n,
@@ -60,43 +60,65 @@ noncomputable def QuadraticMap.directSum_ext'
   rw [Finset.mem_filter] at h
   refine offDiag _ _ h.2 _ _
 
+
 -- The `ext` paper explains a little why _this_ is the one tagged `ext` not the above.
 @[ext]
-noncomputable def QuadraticMap.directSum_ext [LinearOrder ι]
-    {Q₁ Q₂ : QuadraticMap R (⨁ i, Mᵢ i) N}
-    (diag : ∀ i, Q₁.comp (DirectSum.lof R _ Mᵢ i) = Q₂.comp (DirectSum.lof R _ Mᵢ i))
+theorem QuadraticMap.dfinsupp_ext [LinearOrder ι]
+    {Q₁ Q₂ : QuadraticMap R (Π₀ i, Mᵢ i) N}
+    (diag : ∀ i, Q₁.comp (DFinsupp.lsingle i) = Q₂.comp (DFinsupp.lsingle i))
     (upperTri : ∀ i j, i ≠ j →
-      Q₁.polarBilin.compl₁₂ (DirectSum.lof R ι Mᵢ i) (DirectSum.lof R ι Mᵢ j) =
-      Q₂.polarBilin.compl₁₂ (DirectSum.lof R ι Mᵢ i) (DirectSum.lof R ι Mᵢ j)) :
+      Q₁.polarBilin.compl₁₂ (DFinsupp.lsingle i) (DFinsupp.lsingle j) =
+      Q₂.polarBilin.compl₁₂ (DFinsupp.lsingle i) (DFinsupp.lsingle j)) :
     Q₁ = Q₂ :=
   QuadraticMap.directSum_ext'
     (fun i => DFunLike.congr_fun <| diag i)
     (fun i j hij m n => DFunLike.congr_fun (DFunLike.congr_fun (upperTri i j hij) m) n)
 
+
+
+variable (R) in
+@[simps -fullyApplied]
+def extendZero {P : ι → Prop} [DecidablePred P] :
+    ((i : { i : ι // P i}) → Mᵢ i.val) →ₗ[R] Π i, Mᵢ i where
+  toFun x := fun i => if h : P i then x ⟨_, h⟩ else 0
+  map_add' _ _ := by aesop
+  map_smul' _ _ := by aesop
+
 -- note the families are infinite not finite!
-noncomputable def QuadraticMap.directSumTriangle [LinearOrder ι] :
+def QuadraticMap.dfinsuppTriangle [LinearOrder ι] :
     ((Π i, QuadraticMap R (Mᵢ i) N) ×
       (Π ij : {p : ι × ι // p.1 < p.2}, Mᵢ ij.val.1 →ₗ[R] Mᵢ ij.val.2 →ₗ[R] N)) ≃ₗ[R]
-      QuadraticMap R (⨁ i, Mᵢ i) N :=
+      QuadraticMap R (Π₀ i, Mᵢ i) N :=
   .ofLinear
     -- the forward map
     (LinearMap.coprod
-      QuadraticMap.directSum
+      QuadraticMap.dfinsupp
       (LinearMap.BilinMap.toQuadraticMapLinearMap R R (⨁ i, Mᵢ i) ∘ₗ
-        -- this one will be `BilinMap.directSum`
-        sorry))
+        LinearMap.dfinsupp₂ ∘ₗ (LinearEquiv.piCurry R _).toLinearMap ∘ₗ
+          (LinearEquiv.piCongrLeft R
+            (fun i => Mᵢ i.fst →ₗ[R] Mᵢ i.snd →ₗ[R] N) (Equiv.sigmaEquivProd ι ι).symm).toLinearMap ∘ₗ
+              extendZero R
+                (Mᵢ := fun ij => Mᵢ ij.1 →ₗ[R] Mᵢ ij.2 →ₗ[R] N)
+                (P := fun ij : ι × ι => ij.1 < ij.2) ))
     -- the reverse map
     (LinearMap.prod
-      (LinearMap.pi fun i => QuadraticMap.compL (R := R) (DirectSum.lof _ _ _ i))
+      (LinearMap.pi fun i => QuadraticMap.compL (R := R) (DFinsupp.lsingle i))
       (LinearMap.pi fun ij =>
-        LinearMap.lcompl₁₂ R (DirectSum.lof R _ _ ij.val.1) (DirectSum.lof R _ _ ij.val.2) ∘ₗ
-          -- this is the linear version of `QuadraticMap.polarBilin`
-          sorry))
+        LinearMap.lcompl₁₂ R (DFinsupp.lsingle ij.val.1) (DFinsupp.lsingle ij.val.2) ∘ₗ
+          QuadraticMap.polarBilinHom))
     -- proof they are inverses
     (by
       ext Q i j hij : 2 <;> dsimp
       · ext mi
         dsimp
+        simp [LinearEquiv.piCongrLeft, LinearEquiv.piCongrLeft',
+          Equiv.piCongrLeft', LinearMap.BilinMap.toQuadraticMapLinearMap]
+        unfold Sigma.curry
+        dsimp
+        -- something is going wrong with `dsimp` here
+        erw [LinearMap.coe_mk]
+        dsimp
+        erw [DFinsupp.sumZeroHom_single, LinearMap.coe_mk]
         sorry
       · ext mi mj
         dsimp
@@ -115,3 +137,22 @@ noncomputable def QuadraticMap.directSumTriangle [LinearOrder ι] :
       · ext jk mj mk
         dsimp
         sorry)
+
+
+-- The `ext` paper explains a little why _this_ is the one tagged `ext` not the above.
+@[ext]
+theorem QuadraticMap.directSum_ext [LinearOrder ι]
+    {Q₁ Q₂ : QuadraticMap R (⨁ i, Mᵢ i) N}
+    (diag : ∀ i, Q₁.comp (DirectSum.lof R _ Mᵢ i) = Q₂.comp (DirectSum.lof R _ Mᵢ i))
+    (upperTri : ∀ i j, i ≠ j →
+      Q₁.polarBilin.compl₁₂ (DirectSum.lof R ι Mᵢ i) (DirectSum.lof R ι Mᵢ j) =
+      Q₂.polarBilin.compl₁₂ (DirectSum.lof R ι Mᵢ i) (DirectSum.lof R ι Mᵢ j)) :
+    Q₁ = Q₂ :=
+  QuadraticMap.dfinsupp_ext diag upperTri
+
+-- note the families are infinite not finite!
+def QuadraticMap.directSumTriangle [LinearOrder ι] :
+    ((Π i, QuadraticMap R (Mᵢ i) N) ×
+      (Π ij : {p : ι × ι // p.1 < p.2}, Mᵢ ij.val.1 →ₗ[R] Mᵢ ij.val.2 →ₗ[R] N)) ≃ₗ[R]
+      QuadraticMap R (⨁ i, Mᵢ i) N :=
+  QuadraticMap.dfinsuppTriangle
