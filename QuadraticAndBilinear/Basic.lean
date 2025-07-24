@@ -89,7 +89,7 @@ noncomputable def QuadraticMap.directSumTriangle [LinearOrder ι] :
     (LinearMap.prod
       (LinearMap.pi fun i => QuadraticMap.compL (R := R) (DirectSum.lof _ _ _ i))
       (LinearMap.pi fun ij =>
-        LinearMap.lcompl₁₂ (DirectSum.lof _ _ _ ij.val.1) (DirectSum.lof _ _ _ ij.val.2) ∘ₗ
+        LinearMap.lcompl₁₂ R (DirectSum.lof R _ _ ij.val.1) (DirectSum.lof R _ _ ij.val.2) ∘ₗ
           -- this is the linear version of `QuadraticMap.polarBilin`
           sorry))
     -- proof they are inverses
