@@ -2,6 +2,7 @@ import Mathlib.LinearAlgebra.BilinearMap
 
 variable  {S R₁ R₂ N Mₗ Pₗ Qₗ Qₗ' : Type*}
 
+variable (S) in
 /-- `LinearMap.lcompl₁₂` is linear in the bilinear map. -/
 @[simps]
 def LinearMap.lcompl₁₂ [Semiring S] [Semiring R₁] [Semiring R₂]
