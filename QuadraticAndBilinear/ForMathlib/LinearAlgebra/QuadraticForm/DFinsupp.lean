@@ -40,10 +40,14 @@ def QuadraticMap.dfinsupp [DecidableEq ι] :
     ext x
     classical
     simp [DFinsupp.sumZeroHom_apply]
+    eta_expand
+    simp
   map_smul' _ _ := by
     ext x
     classical
     simp [DFinsupp.sumZeroHom_apply, DFinsupp.smul_sum]
+    eta_expand
+    simp
 
 theorem QuadraticMap.dfinsupp_mk (Q : Π i, QuadraticMap R (Mᵢ i) N)
     (v : Π i, Mᵢ i) (s : Multiset ι) (hs) :
