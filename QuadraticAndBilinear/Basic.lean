@@ -18,27 +18,13 @@ example (B : M →ₗ[R] M →ₗ[R] N) : B.IsAlt ↔ ∀ m, B m m = 0 := Iff.rf
 -- defn:quadratic_maps
 example (Q : QuadraticMap R M N) (a : R) (m : M) : Q (a • m) = (a * a) • Q m := Q.map_smul a m
 
-open scoped DirectSum
-
 variable {ι : Type*} {Mᵢ : ι → Type*}
 variable [DecidableEq ι]  [(i : ι) → AddCommGroup (Mᵢ i)] [(i : ι) → Module R (Mᵢ i)]
 
--- defn:direct_sums_of_quadratic_maps
-def QuadraticMap.directSum [DecidableEq ι] :
-    (Π i, QuadraticMap R (Mᵢ i) N) →ₗ[R] QuadraticMap R (⨁ i, Mᵢ i) N :=
-  QuadraticMap.dfinsupp
-
-@[simp]
-theorem QuadraticMap.directSum_of (i : ι) (Q : QuadraticMap R (Mᵢ i) N) :
-    QuadraticMap.directSum (Pi.single i Q) = Q.comp (DirectSum.component _ _ _ i) :=
-  QuadraticMap.dfinsupp_piSingle _ _
+section
+open scoped DirectSum
 
 
-@[simp]
-theorem QuadraticMap.directSum_apply_of
-      (Q : ⨁ i, QuadraticMap R (Mᵢ i) N) (i : ι) (m : Mᵢ i) :
-    QuadraticMap.directSum Q (DirectSum.of _ i m) = Q i m :=
-  QuadraticMap.dfinsupp_apply_single _ _ _
 
 /-- Two quadratic maps from a direct sum agree if they agree:
 1. On the diagonal
@@ -60,6 +46,7 @@ theorem QuadraticMap.directSum_ext'
   rw [Finset.mem_filter] at h
   refine offDiag _ _ h.2 _ _
 
+end
 
 -- The `ext` paper explains a little why _this_ is the one tagged `ext` not the above.
 @[ext]
@@ -93,7 +80,7 @@ def QuadraticMap.dfinsuppTriangle [LinearOrder ι] :
     -- the forward map
     (LinearMap.coprod
       QuadraticMap.dfinsupp
-      (LinearMap.BilinMap.toQuadraticMapLinearMap R R (⨁ i, Mᵢ i) ∘ₗ
+      (LinearMap.BilinMap.toQuadraticMapLinearMap R R (Π₀ i, Mᵢ i) ∘ₗ
         LinearMap.dfinsupp₂ ∘ₗ (LinearEquiv.piCurry R _).toLinearMap ∘ₗ
           (LinearEquiv.piCongrLeft R
             (fun i => Mᵢ i.fst →ₗ[R] Mᵢ i.snd →ₗ[R] N) (Equiv.sigmaEquivProd ι ι).symm).toLinearMap ∘ₗ
@@ -112,16 +99,13 @@ def QuadraticMap.dfinsuppTriangle [LinearOrder ι] :
       · ext mi
         dsimp
         simp [LinearEquiv.piCongrLeft, LinearEquiv.piCongrLeft',
-          Equiv.piCongrLeft', LinearMap.BilinMap.toQuadraticMapLinearMap]
-        unfold Sigma.curry
-        dsimp
-        -- something is going wrong with `dsimp` here
-        erw [LinearMap.coe_mk]
-        dsimp
-        erw [DFinsupp.sumZeroHom_single, LinearMap.coe_mk]
-        sorry
+          Equiv.piCongrLeft', Sigma.curry]
       · ext mi mj
         dsimp
+        simp [LinearEquiv.piCongrLeft, LinearEquiv.piCongrLeft',
+          Equiv.piCongrLeft', polar_add]
+        unfold Sigma.curry
+        simp [polar]
         sorry)
     (by
       ext i Qi : 4 <;> dsimp
@@ -138,6 +122,25 @@ def QuadraticMap.dfinsuppTriangle [LinearOrder ι] :
         dsimp
         sorry)
 
+
+open scoped DirectSum
+
+-- defn:direct_sums_of_quadratic_maps
+def QuadraticMap.directSum [DecidableEq ι] :
+    (Π i, QuadraticMap R (Mᵢ i) N) →ₗ[R] QuadraticMap R (⨁ i, Mᵢ i) N :=
+  QuadraticMap.dfinsupp
+
+@[simp]
+theorem QuadraticMap.directSum_of (i : ι) (Q : QuadraticMap R (Mᵢ i) N) :
+    QuadraticMap.directSum (Pi.single i Q) = Q.comp (DirectSum.component _ _ _ i) :=
+  QuadraticMap.dfinsupp_piSingle _ _
+
+
+@[simp]
+theorem QuadraticMap.directSum_apply_of
+      (Q : ⨁ i, QuadraticMap R (Mᵢ i) N) (i : ι) (m : Mᵢ i) :
+    QuadraticMap.directSum Q (DirectSum.of _ i m) = Q i m :=
+  QuadraticMap.dfinsupp_apply_single _ _ _
 
 -- The `ext` paper explains a little why _this_ is the one tagged `ext` not the above.
 @[ext]

@@ -63,6 +63,6 @@ theorem QuadraticMap.dfinsupp_piSingle (i : ι) (Q : QuadraticMap R (Mᵢ i) N) 
 
 @[simp]
 theorem QuadraticMap.dfinsupp_apply_single
-      (Q : Π₀ i, QuadraticMap R (Mᵢ i) N) (i : ι) (m : Mᵢ i) :
+      (Q : Π i, QuadraticMap R (Mᵢ i) N) (i : ι) (m : Mᵢ i) :
     QuadraticMap.dfinsupp Q (DFinsupp.single i m) = Q i m := by
   simp [QuadraticMap.dfinsupp]
