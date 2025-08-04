@@ -30,10 +30,11 @@ namespace LinearMap
 open LinearMap (BilinMap)
 
 /-- The bilinear version of `DFinsupp.lsum`. -/
-def dfinsupp₂ : (Π i j, Mᵢ i →ₗ[R] Mₖ j →ₗ[R] N) →ₗ[R] (Π₀ i, Mᵢ i) →ₗ[R] (Π₀ i, Mₖ i) →ₗ[R] N :=
-  (DFinsupp.lsum R).toLinearMap ∘ₗ LinearMap.piMap fun _ =>
-    LinearMap.lflip ∘ₗ (DFinsupp.lsum R).toLinearMap ∘ₗ LinearMap.piMap fun _ =>
-      LinearMap.lflip
+def dfinsupp₂ : (Π i j, Mᵢ i →ₗ[R] Mₖ j →ₗ[R] N) ≃ₗ[R] (Π₀ i, Mᵢ i) →ₗ[R] (Π₀ i, Mₖ i) →ₗ[R] N :=
+  LinearEquiv.piCongrRight (fun _ =>
+    LinearEquiv.piCongrRight (fun _ => LinearMap.lflip)
+      ≪≫ₗ DFinsupp.lsum R ≪≫ₗ LinearMap.lflip)
+    ≪≫ₗ DFinsupp.lsum R
 
 @[simp]
 theorem dfinsupp₂_piSingle_piSingle (i : ι) (j : κ) (B : Mᵢ i →ₗ[R] Mₖ j →ₗ[R] N) :

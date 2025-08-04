@@ -81,7 +81,7 @@ def QuadraticMap.dfinsuppTriangle [LinearOrder ι] :
     (LinearMap.coprod
       QuadraticMap.dfinsupp
       (LinearMap.BilinMap.toQuadraticMapLinearMap R R (Π₀ i, Mᵢ i) ∘ₗ
-        LinearMap.dfinsupp₂ ∘ₗ (LinearEquiv.piCurry R _).toLinearMap ∘ₗ
+        LinearMap.dfinsupp₂.toLinearMap ∘ₗ (LinearEquiv.piCurry R _).toLinearMap ∘ₗ
           (LinearEquiv.piCongrLeft R
             (fun i => Mᵢ i.fst →ₗ[R] Mᵢ i.snd →ₗ[R] N) (Equiv.sigmaEquivProd ι ι).symm).toLinearMap ∘ₗ
               extendZero R
